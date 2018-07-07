@@ -2,22 +2,30 @@ from process_image import ProcessImage
 
 from picsnet import NeuralTransfer
 
-content_path = ""
+content_path = "/Users/liam/Desktop/Projects/picsnet/photos/mich.jpg"
 
-style_path = ""
+style_path = "/Users/liam/Desktop/Projects/picsnet/photos/first_star.jpg"
 
-height = 200
+height = 1600
 
-width = 200
+width = 550
+
+retain_content_color = True
+
+content = ProcessImage(content_path, height, width)
 
 style = ProcessImage(style_path, height, width)
 
-content = ProcessImage(content_path, height, width)
+
+if retain_content_color:
+
+    style.image = ProcessImage.histogram_match(content.image, style.image)
+
 
 style.process_image()
 
 content.process_image()
 
-trans = NeuralTransfer(style.processed_image, content.processed_image, height, width, 1, 0.00005, 0.00001)
+trans = NeuralTransfer(style.processed_image, content.processed_image, height, width, 0.0005, 0.000005, 0.00001, 5)
 
 trans.run_stylizing()

@@ -1,11 +1,20 @@
 
 import tensorflow as tf
 import numpy as np
-from PIL import Image
+from process_image import ProcessImage
+
 
 class NeuralTransfer(object):
 
-    def __init__(self, style_image, content_image, height, width, style_weight, content_weight, tv_weight, blank_image = False):
+    def __init__(self, style_image,
+                 content_image,
+                 height,
+                 width,
+                 style_weight,
+                 content_weight,
+                 tv_weight,
+                 learning_rate,
+                 blank_image=False):
 
         self.style_image = style_image
 
@@ -21,6 +30,7 @@ class NeuralTransfer(object):
 
         self.tv_weight = tv_weight
 
+        self.learning_rate = learning_rate
 
         if blank_image:
 
@@ -46,15 +56,14 @@ class NeuralTransfer(object):
 
         return final
 
-    @staticmethod
-    def content_loss(input_image, content_image):
+    def content_loss(self, input_image, content_image):
 
-        increment_loss = tf.reduce_sum(tf.square(input_image - content_image))/(height*width)
+        increment_loss = tf.reduce_sum(tf.square(input_image - content_image))/(self.height*self.width)
 
         return increment_loss
 
-    @staticmethod
-    def style_loss(input_gramm, style_gramm, weight):
+
+    def style_loss(self, input_gramm, style_gramm, weight):
 
         increment_loss = tf.reduce_sum((tf.square(input_gramm - style_gramm)))
 
@@ -62,8 +71,7 @@ class NeuralTransfer(object):
 
         return increment_loss
 
-    @staticmethod
-    def tv_loss(image):
+    def tv_loss(self, image):
 
         increment_loss = (tf.reduce_sum(tf.abs(image[:, 1:, :, :] - image[:, :-1, :, :])) +
 
@@ -127,7 +135,7 @@ class NeuralTransfer(object):
 
         loss = self.content_weight * c_loss + self.style_weight * s_loss + self.tv_weight * t_loss
 
-        opt = tf.train.AdamOptimizer(learning_rate=1)
+        opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
         run_it = opt.minimize(loss, var_list=tinkered_tensor)
 
@@ -145,17 +153,7 @@ class NeuralTransfer(object):
 
                 final_image = sess2.run(tinkered_tensor)[0]
 
-                final_image[:, :, 2] += 123.68
-
-                final_image[:, :, 1] += 116.779
-
-                final_image[:, :, 0] += 103.939
-
-                final_image = final_image[:, :, ::-1]
-
-                final_image = np.clip(final_image, 0, 255).astype("uint8")
-
-                img = Image.fromarray(final_image, 'RGB')
+                img = ProcessImage.unprocess_image(final_image)
 
                 img.save("temp_output.jpg")
 
