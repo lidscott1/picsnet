@@ -14,6 +14,7 @@ class NeuralTransfer(object):
                  content_weight,
                  tv_weight,
                  learning_rate,
+                 iterations = 100,
                  blank_image=False):
 
         self.style_image = style_image
@@ -31,6 +32,8 @@ class NeuralTransfer(object):
         self.tv_weight = tv_weight
 
         self.learning_rate = learning_rate
+
+        self.iterations = iterations
 
         if blank_image:
 
@@ -143,19 +146,31 @@ class NeuralTransfer(object):
 
         sess2.run(tf.variables_initializer(opt.variables()))
 
-        for i in range(301):
+        for i in range(self.iterations):
 
             _, current_loss = sess2.run([run_it, loss])
 
             print(i, current_loss)
 
-            if i % 10 == 0:
+            if i != 0 and i % 10 == 0:
 
                 final_image = sess2.run(tinkered_tensor)[0]
 
                 img = ProcessImage.unprocess_image(final_image)
 
                 img.save("temp_output.jpg")
+
+                img.show()
+
+                continue_optimizing = input("Continue optimizing (yes / no)? ")
+
+                if continue_optimizing == "no":
+
+                    break
+
+                else:
+
+                    continue
 
         self.final_image = sess2.run(tinkered_tensor)[0]
 
